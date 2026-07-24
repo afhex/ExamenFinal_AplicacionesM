@@ -1,0 +1,12 @@
+<resources>
+    <string name="app_name">FitRutina</string>
+    <string name="nav_home">Inicio</string>
+    <string name="nav_favorites">Favoritos</string>
+    <string name="nav_settings">Ajustes</string>
+    <string name="settings_dark_mode">Modo oscuro</string>
+    <string name="settings_weight_unit">Unidad de peso</string>
+    <string name="weight_kg">Kilogramos (kg)</string>
+    <string name="weight_lb">Libras (lb)</string>
+    <string name="favorites_empty">Aún no tienes ejercicios favoritos</string>
+    <string name="favorites_empty_subtitle">Explora ejercicios y agrégalos a tus favoritos</string>
+</resources>
