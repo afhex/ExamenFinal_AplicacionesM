@@ -5,9 +5,9 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitrutina.app.FitRutinaApplication
 import com.fitrutina.app.data.local.entity.FavoriteExercise
-import com.fitrutina.app.data.remote.RetrofitClient
 import com.fitrutina.app.data.remote.dto.ExerciseCategoryDto
 import com.fitrutina.app.data.remote.dto.ExerciseDto
+import com.fitrutina.app.data.repository.ExerciseRepository
 import com.fitrutina.app.ui.common.UiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -16,17 +16,15 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel para gestionar los datos de ejercicios y categorías musculares.
- * Consume la API REST wger.de mediante Retrofit y expone estados reactivos con UiState.
+ * ViewModel que gestiona la UI de ejercicios.
+ * Garantiza que todo el acceso a datos pase obligatoriamente por el ExerciseRepository.
  */
 class ExerciseViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val database = (application as FitRutinaApplication).database
-    private val favoriteDao = database.favoriteExerciseDao()
-    private val apiService = RetrofitClient.apiService
+    private val repository: ExerciseRepository = (application as FitRutinaApplication).exerciseRepository
 
-    /** Flow con la lista de ejercicios favoritos guardados en Room */
-    val favorites: Flow<List<FavoriteExercise>> = favoriteDao.getAllFavorites()
+    /** Flow con la lista de ejercicios favoritos guardados en Room vía Repository */
+    val favorites: Flow<List<FavoriteExercise>> = repository.getFavoriteExercises()
 
     /** Estado reactivo de las categorías musculares (Loading, Success, Error) */
     private val _categoriesState = MutableStateFlow<UiState<List<ExerciseCategoryDto>>>(UiState.Loading)
@@ -44,21 +42,19 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
         _selectedExercise.value = exercise
     }
 
-
-
     init {
         fetchCategories()
     }
 
     /**
-     * Obtiene las categorías de ejercicios desde la API wger.de.
+     * Obtiene las categorías de ejercicios a través del Repositorio.
      */
     fun fetchCategories() {
         viewModelScope.launch {
             _categoriesState.value = UiState.Loading
             try {
-                val response = apiService.getCategories()
-                _categoriesState.value = UiState.Success(response.results)
+                val categories = repository.getCategories()
+                _categoriesState.value = UiState.Success(categories)
             } catch (e: Exception) {
                 _categoriesState.value = UiState.Error(
                     e.localizedMessage ?: "No se pudo conectar con el servidor de ejercicios."
@@ -68,14 +64,14 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Obtiene la lista de ejercicios filtrados por categoría desde Retrofit.
+     * Obtiene la lista de ejercicios filtrados por categoría a través del Repositorio.
      */
     fun fetchExercisesByCategory(categoryId: Int) {
         viewModelScope.launch {
             _exercisesState.value = UiState.Loading
             try {
-                val response = apiService.getExercisesByCategory(categoryId = categoryId)
-                _exercisesState.value = UiState.Success(response.results)
+                val exercises = repository.getExercisesByCategory(categoryId = categoryId)
+                _exercisesState.value = UiState.Success(exercises)
             } catch (e: Exception) {
                 _exercisesState.value = UiState.Error(
                     e.localizedMessage ?: "Error al cargar la lista de ejercicios."
