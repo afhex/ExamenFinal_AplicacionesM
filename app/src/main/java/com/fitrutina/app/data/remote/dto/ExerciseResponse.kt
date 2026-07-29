@@ -1,0 +1,11 @@
+package com.fitrutina.app.data.remote.dto
+
+import com.google.gson.annotations.SerializedName
+
+/**
+ * Respuesta paginada de ejercicios desde la API wger.de
+ */
+data class ExerciseResponse(
+    @SerializedName("count") val count: Int,
+    @SerializedName("results") val results: List<ExerciseDto>
+)
