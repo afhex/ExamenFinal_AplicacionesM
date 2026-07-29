@@ -10,27 +10,41 @@ FitRutina te permite explorar ejercicios organizados por grupo muscular, ver ins
 
 - **Lenguaje**: Kotlin
 - **UI**: Jetpack Compose + Material3
-- **Arquitectura**: MVVM + Repository
+- **Arquitectura**: MVVM + Repository (Clean Architecture)
 - **Persistencia local**: Room + DataStore
 - **API REST**: Retrofit (wger.de)
 - **Imágenes**: Coil
 - **Hardware**: Cámara con permisos en runtime
 
-## Arquitectura
+## Arquitectura y Estructura de Paquetes
 
 ```
-UI (Compose) → ViewModel (StateFlow) → Repository → Room / Retrofit
-                                                   → DataStore
+com.fitrutina.app/
+├── data/                    # Capa de Datos (Data Layer)
+│   ├── local/               # Base de datos Room (Entities, DAOs, Database)
+│   │   ├── dao/
+│   │   ├── entity/
+│   │   └── AppDatabase.kt
+│   ├── preferences/         # Preferencias DataStore (UserPreferencesManager)
+│   └── remote/              # API REST Retrofit (ApiService, RetrofitClient, DTOs)
+│       ├── api/
+│       └── dto/
+└── ui/                      # Capa de Presentación (UI Layer)
+    ├── common/              # Componentes reusables (UiState, NetworkImage, StateComponents)
+    ├── navigation/          # Navegación con NavHost (Screen, AppNavigation)
+    ├── screens/             # Pantallas en Jetpack Compose
+    ├── theme/               # Sistema de diseño Material3 (Color, Theme, Type)
+    └── viewmodel/           # ViewModels con StateFlow / Coroutines
 ```
 
 ## Pantallas
 
-1. Home — Categorías musculares
-2. Lista de ejercicios por categoría
-3. Detalle del ejercicio
-4. Favoritos (rutina personal)
-5. Ajustes (modo oscuro, unidad de peso)
-6. Agregar progreso (cámara)
+1. **Home** — Categorías musculares consumidas desde la API REST
+2. **Lista de Ejercicios** — Filtrado por grupo muscular
+3. **Detalle del Ejercicio** — Instrucciones completas e imágenes con Coil
+4. **Favoritos** — Rutina personal persistida en Room
+5. **Ajustes** — Modo oscuro y unidad de peso guardadas en DataStore
+6. **Agregar Progreso** — Captura de fotos con la cámara y guardado local
 
 ## API
 
