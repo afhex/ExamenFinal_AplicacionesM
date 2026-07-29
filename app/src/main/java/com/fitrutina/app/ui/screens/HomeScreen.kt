@@ -26,10 +26,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fitrutina.app.data.remote.dto.ExerciseCategoryDto
+import com.fitrutina.app.ui.common.ErrorStateScreen
+import com.fitrutina.app.ui.common.LoadingStateScreen
+import com.fitrutina.app.ui.common.UiState
 import com.fitrutina.app.ui.viewmodel.ExerciseViewModel
 
 /**
- * Retorna un emoji descriptivo basado en el nombre o ID de la categoría de la API.
+ * Retorna un emoji descriptivo basado en la categoría.
  */
 fun getCategoryEmoji(categoryName: String): String {
     return when (categoryName.lowercase()) {
@@ -45,14 +48,14 @@ fun getCategoryEmoji(categoryName: String): String {
 }
 
 /**
- * Pantalla principal que muestra las categorías musculares consumidas desde la API REST.
+ * Pantalla principal que muestra las categorías musculares manejando los 3 estados de UiState.
  */
 @Composable
 fun HomeScreen(
     viewModel: ExerciseViewModel,
     onCategoryClick: (categoryId: Int, categoryName: String) -> Unit = { _, _ -> }
 ) {
-    val categories by viewModel.categories.collectAsStateWithLifecycle()
+    val categoriesState by viewModel.categoriesState.collectAsStateWithLifecycle()
 
     Column(
         modifier = Modifier
@@ -73,15 +76,28 @@ fun HomeScreen(
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lista de categorías obtenidas de la API
-        LazyColumn(
-            verticalArrangement = Arrangement.spacedBy(12.dp)
-        ) {
-            items(categories) { category ->
-                CategoryCard(
-                    category = category,
-                    onClick = { onCategoryClick(category.id, category.name) }
+        // Manejo de estados: Loading, Error, Success
+        when (val state = categoriesState) {
+            is UiState.Loading -> {
+                LoadingStateScreen(message = "Cargando categorías musculares...")
+            }
+            is UiState.Error -> {
+                ErrorStateScreen(
+                    message = state.message,
+                    onRetry = { viewModel.fetchCategories() }
                 )
+            }
+            is UiState.Success -> {
+                LazyColumn(
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(state.data) { category ->
+                        CategoryCard(
+                            category = category,
+                            onClick = { onCategoryClick(category.id, category.name) }
+                        )
+                    }
+                }
             }
         }
     }

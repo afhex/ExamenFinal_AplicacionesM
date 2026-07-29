@@ -1,10 +1,13 @@
 package com.fitrutina.app.ui.viewmodel
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitrutina.app.FitRutinaApplication
 import com.fitrutina.app.data.local.entity.FavoriteExercise
 import com.fitrutina.app.data.remote.RetrofitClient
 import com.fitrutina.app.data.remote.dto.ExerciseCategoryDto
+import com.fitrutina.app.ui.common.UiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,7 +16,7 @@ import kotlinx.coroutines.launch
 
 /**
  * ViewModel para gestionar los datos de ejercicios y categorías musculares.
- * Consume la API REST wger.de mediante Retrofit y expone el estado a la UI.
+ * Consume la API REST wger.de mediante Retrofit y expone estados reactivos con UiState.
  */
 class ExerciseViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -24,27 +27,28 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     /** Flow con la lista de ejercicios favoritos guardados en Room */
     val favorites: Flow<List<FavoriteExercise>> = favoriteDao.getAllFavorites()
 
-    /** Lista de categorías musculares obtenidas desde la API */
-    private val _categories = MutableStateFlow<List<ExerciseCategoryDto>>(emptyList())
-    val categories: StateFlow<List<ExerciseCategoryDto>> = _categories.asStateFlow()
+    /** Estado reactivo de las categorías musculares (Loading, Success, Error) */
+    private val _categoriesState = MutableStateFlow<UiState<List<ExerciseCategoryDto>>>(UiState.Loading)
+    val categoriesState: StateFlow<UiState<List<ExerciseCategoryDto>>> = _categoriesState.asStateFlow()
 
     init {
         fetchCategories()
     }
 
     /**
-     * Obtiene las categorías de ejercicios desde la API wger.de usando Corrutinas.
+     * Obtiene las categorías de ejercicios desde la API wger.de manejando los 3 estados típicos.
      */
     fun fetchCategories() {
         viewModelScope.launch {
+            _categoriesState.value = UiState.Loading
             try {
                 val response = apiService.getCategories()
-                _categories.value = response.results
+                _categoriesState.value = UiState.Success(response.results)
             } catch (e: Exception) {
-                // En caso de error de red, mantiene la lista previa
-                _categories.value = emptyList()
+                _categoriesState.value = UiState.Error(
+                    e.localizedMessage ?: "No se pudo conectar con el servidor de ejercicios."
+                )
             }
         }
     }
 }
-
