@@ -1,5 +1,6 @@
 package com.fitrutina.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -17,41 +18,42 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.fitrutina.app.data.remote.dto.ExerciseCategoryDto
 import com.fitrutina.app.ui.viewmodel.ExerciseViewModel
 
 /**
- * Modelo temporal para las categorías musculares.
- * En la Fase 2 se reemplazará con datos de la API.
+ * Retorna un emoji descriptivo basado en el nombre o ID de la categoría de la API.
  */
-data class MuscleCategory(
-    val id: Int,
-    val name: String,
-    val emoji: String,
-    val exerciseCount: String
-)
-
-// Categorías hardcodeadas (se conectarán a la API en Fase 2)
-private val muscleCategories = listOf(
-    MuscleCategory(8, "Brazos", "💪", "15+ ejercicios"),
-    MuscleCategory(9, "Piernas", "🦵", "20+ ejercicios"),
-    MuscleCategory(11, "Pecho", "🫁", "12+ ejercicios"),
-    MuscleCategory(12, "Espalda", "🔙", "18+ ejercicios"),
-    MuscleCategory(13, "Hombros", "🏋️", "10+ ejercicios"),
-    MuscleCategory(10, "Abdomen", "🧱", "14+ ejercicios"),
-    MuscleCategory(14, "Cardio", "❤️", "8+ ejercicios")
-)
+fun getCategoryEmoji(categoryName: String): String {
+    return when (categoryName.lowercase()) {
+        "arms", "brazos" -> "💪"
+        "legs", "piernas" -> "🦵"
+        "chest", "pecho" -> "🫁"
+        "back", "espalda" -> "🔙"
+        "shoulders", "hombros" -> "🏋️"
+        "abs", "abdomen", "core" -> "🧱"
+        "calves", "gemelos" -> "🏃"
+        else -> "🏋️‍♂️"
+    }
+}
 
 /**
- * Pantalla principal que muestra las categorías musculares.
- * Cada categoría se muestra como una card con emoji, nombre y conteo.
+ * Pantalla principal que muestra las categorías musculares consumidas desde la API REST.
  */
 @Composable
-fun HomeScreen(viewModel: ExerciseViewModel) {
+fun HomeScreen(
+    viewModel: ExerciseViewModel,
+    onCategoryClick: (categoryId: Int, categoryName: String) -> Unit = { _, _ -> }
+) {
+    val categories by viewModel.categories.collectAsStateWithLifecycle()
+
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -71,24 +73,32 @@ fun HomeScreen(viewModel: ExerciseViewModel) {
         )
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lista de categorías
+        // Lista de categorías obtenidas de la API
         LazyColumn(
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            items(muscleCategories) { category ->
-                CategoryCard(category = category)
+            items(categories) { category ->
+                CategoryCard(
+                    category = category,
+                    onClick = { onCategoryClick(category.id, category.name) }
+                )
             }
         }
     }
 }
 
 /**
- * Card individual para una categoría muscular.
+ * Card individual para una categoría muscular obtenida de Retrofit.
  */
 @Composable
-private fun CategoryCard(category: MuscleCategory) {
+private fun CategoryCard(
+    category: ExerciseCategoryDto,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),
@@ -100,9 +110,8 @@ private fun CategoryCard(category: MuscleCategory) {
                 .padding(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            // Emoji como ícono
             Text(
-                text = category.emoji,
+                text = getCategoryEmoji(category.name),
                 fontSize = 36.sp,
                 textAlign = TextAlign.Center,
                 modifier = Modifier.size(48.dp)
@@ -115,7 +124,7 @@ private fun CategoryCard(category: MuscleCategory) {
                     color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
-                    text = category.exerciseCount,
+                    text = "Categoría oficial API wger.de",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
