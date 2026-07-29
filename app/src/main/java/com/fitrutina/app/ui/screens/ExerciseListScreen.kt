@@ -1,5 +1,6 @@
 package com.fitrutina.app.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,7 +25,6 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -50,9 +50,9 @@ fun ExerciseListScreen(
     categoryId: Int,
     categoryName: String,
     viewModel: ExerciseViewModel,
+    onExerciseClick: (ExerciseDto) -> Unit,
     onBackClick: () -> Unit
 ) {
-    // Al cargar la pantalla, solicitar los ejercicios de esta categoría
     LaunchedEffect(categoryId) {
         viewModel.fetchExercisesByCategory(categoryId)
     }
@@ -104,7 +104,10 @@ fun ExerciseListScreen(
                             modifier = Modifier.padding(vertical = 12.dp)
                         ) {
                             items(state.data) { exercise ->
-                                ExerciseItemCard(exercise = exercise)
+                                ExerciseItemCard(
+                                    exercise = exercise,
+                                    onClick = { onExerciseClick(exercise) }
+                                )
                             }
                         }
                     }
@@ -118,9 +121,14 @@ fun ExerciseListScreen(
  * Card individual para un ejercicio de la lista.
  */
 @Composable
-private fun ExerciseItemCard(exercise: ExerciseDto) {
+private fun ExerciseItemCard(
+    exercise: ExerciseDto,
+    onClick: () -> Unit
+) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant
         ),

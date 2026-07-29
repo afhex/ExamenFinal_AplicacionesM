@@ -32,9 +32,19 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     private val _categoriesState = MutableStateFlow<UiState<List<ExerciseCategoryDto>>>(UiState.Loading)
     val categoriesState: StateFlow<UiState<List<ExerciseCategoryDto>>> = _categoriesState.asStateFlow()
 
+    /** Ejercicio seleccionado para ver su detalle */
+    private val _selectedExercise = MutableStateFlow<ExerciseDto?>(null)
+    val selectedExercise: StateFlow<ExerciseDto?> = _selectedExercise.asStateFlow()
+
     /** Estado reactivo de la lista de ejercicios filtrada por categoría */
     private val _exercisesState = MutableStateFlow<UiState<List<ExerciseDto>>>(UiState.Loading)
     val exercisesState: StateFlow<UiState<List<ExerciseDto>>> = _exercisesState.asStateFlow()
+
+    fun selectExercise(exercise: ExerciseDto) {
+        _selectedExercise.value = exercise
+    }
+
+
 
     init {
         fetchCategories()

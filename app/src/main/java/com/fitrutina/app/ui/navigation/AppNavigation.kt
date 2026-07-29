@@ -17,6 +17,8 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.fitrutina.app.ui.screens.ExerciseDetailScreen
 import com.fitrutina.app.ui.screens.ExerciseListScreen
 import com.fitrutina.app.ui.screens.FavoritesScreen
 import com.fitrutina.app.ui.screens.HomeScreen
@@ -26,7 +28,6 @@ import com.fitrutina.app.ui.viewmodel.SettingsViewModel
 
 /**
  * Composable principal que define la navegación de la app.
- * Incluye un Scaffold con BottomNavigationBar y un NavHost con las rutas.
  */
 @Composable
 fun AppNavigation(
@@ -39,7 +40,6 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    // Mostrar BottomBar solo en pantallas principales
     val shouldShowBottomBar = bottomNavScreens.any { it.route == currentDestination?.route }
 
     Scaffold(
@@ -94,6 +94,26 @@ fun AppNavigation(
                 val categoryName = backStackEntry.arguments?.getString("categoryName") ?: "Ejercicios"
                 ExerciseListScreen(
                     categoryId = categoryId,
+                    categoryName = categoryName,
+                    viewModel = exerciseViewModel,
+                    onExerciseClick = { exercise ->
+                        exerciseViewModel.selectExercise(exercise)
+                        navController.navigate(Screen.ExerciseDetail.createRoute(categoryName))
+                    },
+                    onBackClick = { navController.popBackStack() }
+                )
+            }
+            composable(
+                route = Screen.ExerciseDetail.route,
+                arguments = listOf(
+                    navArgument("categoryName") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val categoryName = backStackEntry.arguments?.getString("categoryName") ?: "Ejercicio"
+                val selectedExercise by exerciseViewModel.selectedExercise.collectAsStateWithLifecycle()
+
+                ExerciseDetailScreen(
+                    exercise = selectedExercise,
                     categoryName = categoryName,
                     viewModel = exerciseViewModel,
                     onBackClick = { navController.popBackStack() }

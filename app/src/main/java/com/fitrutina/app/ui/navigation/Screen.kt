@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.ui.graphics.vector.ImageVector
 
@@ -41,6 +42,16 @@ sealed class Screen(
     ) {
         fun createRoute(categoryId: Int, categoryName: String): String {
             return "exercise_list/$categoryId/$categoryName"
+        }
+    }
+
+    data object ExerciseDetail : Screen(
+        route = "exercise_detail/{categoryName}",
+        title = "Detalle de Ejercicio",
+        icon = Icons.Default.Info
+    ) {
+        fun createRoute(categoryName: String): String {
+            return "exercise_detail/$categoryName"
         }
     }
 }
