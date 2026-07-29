@@ -11,10 +11,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
+import com.fitrutina.app.ui.screens.ExerciseListScreen
 import com.fitrutina.app.ui.screens.FavoritesScreen
 import com.fitrutina.app.ui.screens.HomeScreen
 import com.fitrutina.app.ui.screens.SettingsScreen
@@ -31,31 +34,38 @@ fun AppNavigation(
     settingsViewModel: SettingsViewModel
 ) {
     val navController = rememberNavController()
-    val screens = listOf(Screen.Home, Screen.Favorites, Screen.Settings)
+    val bottomNavScreens = listOf(Screen.Home, Screen.Favorites, Screen.Settings)
+
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+
+    // Mostrar BottomBar solo en pantallas principales
+    val shouldShowBottomBar = bottomNavScreens.any { it.route == currentDestination?.route }
 
     Scaffold(
         bottomBar = {
-            NavigationBar {
-                val navBackStackEntry by navController.currentBackStackEntryAsState()
-                val currentDestination = navBackStackEntry?.destination
-
-                screens.forEach { screen ->
-                    NavigationBarItem(
-                        icon = { Icon(screen.icon, contentDescription = screen.title) },
-                        label = { Text(screen.title) },
-                        selected = currentDestination?.hierarchy?.any {
-                            it.route == screen.route
-                        } == true,
-                        onClick = {
-                            navController.navigate(screen.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    saveState = true
+            if (shouldShowBottomBar) {
+                NavigationBar {
+                    bottomNavScreens.forEach { screen ->
+                        screen.icon?.let { icon ->
+                            NavigationBarItem(
+                                icon = { Icon(icon, contentDescription = screen.title) },
+                                label = { Text(screen.title) },
+                                selected = currentDestination?.hierarchy?.any {
+                                    it.route == screen.route
+                                } == true,
+                                onClick = {
+                                    navController.navigate(screen.route) {
+                                        popUpTo(navController.graph.findStartDestination().id) {
+                                            saveState = true
+                                        }
+                                        launchSingleTop = true
+                                        restoreState = true
+                                    }
                                 }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
+                            )
                         }
-                    )
+                    }
                 }
             }
         }
@@ -66,7 +76,28 @@ fun AppNavigation(
             modifier = Modifier.padding(innerPadding)
         ) {
             composable(Screen.Home.route) {
-                HomeScreen(viewModel = exerciseViewModel)
+                HomeScreen(
+                    viewModel = exerciseViewModel,
+                    onCategoryClick = { categoryId, categoryName ->
+                        navController.navigate(Screen.ExerciseList.createRoute(categoryId, categoryName))
+                    }
+                )
+            }
+            composable(
+                route = Screen.ExerciseList.route,
+                arguments = listOf(
+                    navArgument("categoryId") { type = NavType.IntType },
+                    navArgument("categoryName") { type = NavType.StringType }
+                )
+            ) { backStackEntry ->
+                val categoryId = backStackEntry.arguments?.getInt("categoryId") ?: 0
+                val categoryName = backStackEntry.arguments?.getString("categoryName") ?: "Ejercicios"
+                ExerciseListScreen(
+                    categoryId = categoryId,
+                    categoryName = categoryName,
+                    viewModel = exerciseViewModel,
+                    onBackClick = { navController.popBackStack() }
+                )
             }
             composable(Screen.Favorites.route) {
                 FavoritesScreen(viewModel = exerciseViewModel)

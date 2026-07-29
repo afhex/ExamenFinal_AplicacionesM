@@ -7,6 +7,7 @@ import com.fitrutina.app.FitRutinaApplication
 import com.fitrutina.app.data.local.entity.FavoriteExercise
 import com.fitrutina.app.data.remote.RetrofitClient
 import com.fitrutina.app.data.remote.dto.ExerciseCategoryDto
+import com.fitrutina.app.data.remote.dto.ExerciseDto
 import com.fitrutina.app.ui.common.UiState
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -31,12 +32,16 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     private val _categoriesState = MutableStateFlow<UiState<List<ExerciseCategoryDto>>>(UiState.Loading)
     val categoriesState: StateFlow<UiState<List<ExerciseCategoryDto>>> = _categoriesState.asStateFlow()
 
+    /** Estado reactivo de la lista de ejercicios filtrada por categoría */
+    private val _exercisesState = MutableStateFlow<UiState<List<ExerciseDto>>>(UiState.Loading)
+    val exercisesState: StateFlow<UiState<List<ExerciseDto>>> = _exercisesState.asStateFlow()
+
     init {
         fetchCategories()
     }
 
     /**
-     * Obtiene las categorías de ejercicios desde la API wger.de manejando los 3 estados típicos.
+     * Obtiene las categorías de ejercicios desde la API wger.de.
      */
     fun fetchCategories() {
         viewModelScope.launch {
@@ -47,6 +52,23 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
             } catch (e: Exception) {
                 _categoriesState.value = UiState.Error(
                     e.localizedMessage ?: "No se pudo conectar con el servidor de ejercicios."
+                )
+            }
+        }
+    }
+
+    /**
+     * Obtiene la lista de ejercicios filtrados por categoría desde Retrofit.
+     */
+    fun fetchExercisesByCategory(categoryId: Int) {
+        viewModelScope.launch {
+            _exercisesState.value = UiState.Loading
+            try {
+                val response = apiService.getExercisesByCategory(categoryId = categoryId)
+                _exercisesState.value = UiState.Success(response.results)
+            } catch (e: Exception) {
+                _exercisesState.value = UiState.Error(
+                    e.localizedMessage ?: "Error al cargar la lista de ejercicios."
                 )
             }
         }
