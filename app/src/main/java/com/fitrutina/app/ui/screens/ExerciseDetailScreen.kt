@@ -8,10 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -24,12 +24,14 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import com.fitrutina.app.data.remote.dto.ExerciseDto
+import com.fitrutina.app.ui.common.NetworkImage
 import com.fitrutina.app.ui.viewmodel.ExerciseViewModel
 
 /**
- * Pantalla que muestra el detalle completo de un ejercicio seleccionado.
+ * Pantalla que muestra el detalle completo de un ejercicio seleccionado con integración de Coil para imágenes.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -74,7 +76,19 @@ fun ExerciseDetailScreen(
                     .verticalScroll(rememberScrollState())
                     .padding(16.dp)
             ) {
-                // Header Card con ícono principal
+                // Banner / Imagen con Coil
+                NetworkImage(
+                    imageUrl = null, // Se conectará dinámicamente en repositorios con imágenes
+                    contentDescription = exercise.name,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(200.dp)
+                        .clip(RoundedCornerShape(12.dp))
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // Header Card
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -84,15 +98,8 @@ fun ExerciseDetailScreen(
                     Column(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(24.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally
+                            .padding(20.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.FitnessCenter,
-                            contentDescription = null,
-                            modifier = Modifier.padding(bottom = 8.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
                         Text(
                             text = exercise.name,
                             style = MaterialTheme.typography.headlineMedium,
