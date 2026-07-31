@@ -12,6 +12,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -22,16 +24,19 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.fitrutina.app.data.remote.dto.ExerciseDto
 import com.fitrutina.app.ui.common.NetworkImage
 import com.fitrutina.app.ui.viewmodel.ExerciseViewModel
 
 /**
- * Pantalla que muestra el detalle completo de un ejercicio seleccionado con integración de Coil para imágenes.
+ * Pantalla que muestra el detalle completo de un ejercicio seleccionado con opción de marcar como favorito.
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -41,6 +46,12 @@ fun ExerciseDetailScreen(
     viewModel: ExerciseViewModel,
     onBackClick: () -> Unit
 ) {
+    val isFavorite by if (exercise != null) {
+        viewModel.isFavorite(exercise.id).collectAsStateWithLifecycle(initialValue = false)
+    } else {
+        androidx.compose.runtime.remember { androidx.compose.runtime.mutableStateOf(false) }
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -51,6 +62,25 @@ fun ExerciseDetailScreen(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = "Regresar"
                         )
+                    }
+                },
+                actions = {
+                    if (exercise != null) {
+                        IconButton(
+                            onClick = {
+                                viewModel.toggleFavorite(
+                                    exercise = exercise,
+                                    categoryName = categoryName,
+                                    isCurrentlyFavorite = isFavorite
+                                )
+                            }
+                        ) {
+                            Icon(
+                                imageVector = if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                                contentDescription = if (isFavorite) "Eliminar de favoritos" else "Guardar en favoritos",
+                                tint = if (isFavorite) Color.Red else MaterialTheme.colorScheme.onSurface
+                            )
+                        }
                     }
                 }
             )
@@ -78,7 +108,7 @@ fun ExerciseDetailScreen(
             ) {
                 // Banner / Imagen con Coil
                 NetworkImage(
-                    imageUrl = null, // Se conectará dinámicamente en repositorios con imágenes
+                    imageUrl = null,
                     contentDescription = exercise.name,
                     modifier = Modifier
                         .fillMaxWidth()
