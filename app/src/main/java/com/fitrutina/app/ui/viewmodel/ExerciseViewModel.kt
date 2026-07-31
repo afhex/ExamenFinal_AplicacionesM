@@ -79,4 +79,40 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
             }
         }
     }
+
+    /**
+     * Verifica si un ejercicio está en favoritos a través del Repositorio.
+     */
+    fun isFavorite(exerciseId: Int): Flow<Boolean> {
+        return repository.isFavorite(exerciseId)
+    }
+
+    /**
+     * Agrega o elimina un ejercicio de favoritos a través del Repositorio.
+     */
+    fun toggleFavorite(exercise: ExerciseDto, categoryName: String, isCurrentlyFavorite: Boolean) {
+        viewModelScope.launch {
+            val favoriteEntity = FavoriteExercise(
+                id = exercise.id,
+                name = exercise.name,
+                description = exercise.description,
+                category = categoryName,
+                imageUrl = null
+            )
+            if (isCurrentlyFavorite) {
+                repository.removeFavorite(favoriteEntity)
+            } else {
+                repository.addFavorite(favoriteEntity)
+            }
+        }
+    }
+
+    /**
+     * Elimina una entidad de favorito directamente desde la pantalla de Favoritos.
+     */
+    fun removeFavorite(favorite: FavoriteExercise) {
+        viewModelScope.launch {
+            repository.removeFavorite(favorite)
+        }
+    }
 }
