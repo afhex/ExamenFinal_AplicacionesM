@@ -16,25 +16,27 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
 /**
- * ViewModel que gestiona la UI de ejercicios.
- * Garantiza que todo el acceso a datos pase obligatoriamente por el ExerciseRepository.
+ * ViewModel principal de la aplicación que cumple estrictamente con Clean Architecture.
+ * El ViewModel NUNCA accede directamente a los DAOs de Room ni al cliente de Retrofit.
+ * Todo el flujo de datos transita obligatoriamente a través de [ExerciseRepository].
  */
 class ExerciseViewModel(application: Application) : AndroidViewModel(application) {
 
+    // Inyección del repositorio centralizado desde la clase Application
     private val repository: ExerciseRepository = (application as FitRutinaApplication).exerciseRepository
 
-    /** Flow con la lista de ejercicios favoritos guardados en Room vía Repository */
+    /** Flow observable de ejercicios favoritos persistidos en Room vía Repository */
     val favorites: Flow<List<FavoriteExercise>> = repository.getFavoriteExercises()
 
     /** Estado reactivo de las categorías musculares (Loading, Success, Error) */
     private val _categoriesState = MutableStateFlow<UiState<List<ExerciseCategoryDto>>>(UiState.Loading)
     val categoriesState: StateFlow<UiState<List<ExerciseCategoryDto>>> = _categoriesState.asStateFlow()
 
-    /** Ejercicio seleccionado para ver su detalle */
+    /** Ejercicio actualmente seleccionado */
     private val _selectedExercise = MutableStateFlow<ExerciseDto?>(null)
     val selectedExercise: StateFlow<ExerciseDto?> = _selectedExercise.asStateFlow()
 
-    /** Estado reactivo de la lista de ejercicios filtrada por categoría */
+    /** Estado reactivo de la lista de ejercicios filtrados */
     private val _exercisesState = MutableStateFlow<UiState<List<ExerciseDto>>>(UiState.Loading)
     val exercisesState: StateFlow<UiState<List<ExerciseDto>>> = _exercisesState.asStateFlow()
 
@@ -47,7 +49,7 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Obtiene las categorías de ejercicios a través del Repositorio.
+     * Obtiene las categorías de ejercicios a través de [ExerciseRepository].
      */
     fun fetchCategories() {
         viewModelScope.launch {
@@ -64,7 +66,7 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Obtiene la lista de ejercicios filtrados por categoría a través del Repositorio.
+     * Obtiene la lista de ejercicios filtrados por categoría a través de [ExerciseRepository].
      */
     fun fetchExercisesByCategory(categoryId: Int) {
         viewModelScope.launch {
@@ -81,14 +83,14 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Verifica si un ejercicio está en favoritos a través del Repositorio.
+     * Consulta el estado de favorito a través de [ExerciseRepository].
      */
     fun isFavorite(exerciseId: Int): Flow<Boolean> {
         return repository.isFavorite(exerciseId)
     }
 
     /**
-     * Agrega o elimina un ejercicio de favoritos a través del Repositorio.
+     * Guarda o elimina un ejercicio de favoritos a través de [ExerciseRepository].
      */
     fun toggleFavorite(exercise: ExerciseDto, categoryName: String, isCurrentlyFavorite: Boolean) {
         viewModelScope.launch {
@@ -108,7 +110,7 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     }
 
     /**
-     * Elimina una entidad de favorito directamente desde la pantalla de Favoritos.
+     * Elimina una entidad de favorito directamente desde [ExerciseRepository].
      */
     fun removeFavorite(favorite: FavoriteExercise) {
         viewModelScope.launch {
