@@ -4,6 +4,12 @@
 
     <!-- Permiso de internet para consumir la API REST -->
     <uses-permission android:name="android.permission.INTERNET" />
+    
+    <!-- Permiso de cámara para captura de fotos de progreso -->
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-feature
+        android:name="android.hardware.camera"
+        android:required="false" />
 
     <application
         android:name=".FitRutinaApplication"
