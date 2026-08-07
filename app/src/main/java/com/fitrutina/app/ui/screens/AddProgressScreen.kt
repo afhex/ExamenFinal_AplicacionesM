@@ -70,11 +70,17 @@ fun AddProgressScreen(viewModel: ExerciseViewModel) {
     var capturedBitmap by remember { mutableStateOf<Bitmap?>(null) }
     var noteText by remember { mutableStateOf("") }
     var showPermissionRationale by remember { mutableStateOf(false) }
+    var cameraErrorMessage by remember { mutableStateOf<String?>(null) }
 
     val savedPhotos by viewModel.progressPhotos.collectAsStateWithLifecycle(initialValue = emptyList())
 
     val cameraLauncher = rememberCameraCaptureLauncher { bitmap ->
-        capturedBitmap = bitmap
+        if (bitmap != null) {
+            capturedBitmap = bitmap
+            cameraErrorMessage = null
+        } else {
+            cameraErrorMessage = "Captura cancelada o no disponible."
+        }
     }
 
     val permissionLauncher = rememberCameraPermissionLauncher(
