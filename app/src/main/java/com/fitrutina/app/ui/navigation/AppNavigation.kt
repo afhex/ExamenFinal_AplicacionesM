@@ -18,6 +18,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.fitrutina.app.ui.screens.AddProgressScreen
 import com.fitrutina.app.ui.screens.ExerciseDetailScreen
 import com.fitrutina.app.ui.screens.ExerciseListScreen
 import com.fitrutina.app.ui.screens.FavoritesScreen
@@ -35,7 +36,7 @@ fun AppNavigation(
     settingsViewModel: SettingsViewModel
 ) {
     val navController = rememberNavController()
-    val bottomNavScreens = listOf(Screen.Home, Screen.Favorites, Screen.Settings)
+    val bottomNavScreens = listOf(Screen.Home, Screen.Favorites, Screen.AddProgress, Screen.Settings)
 
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
@@ -121,6 +122,9 @@ fun AppNavigation(
             }
             composable(Screen.Favorites.route) {
                 FavoritesScreen(viewModel = exerciseViewModel)
+            }
+            composable(Screen.AddProgress.route) {
+                AddProgressScreen(viewModel = exerciseViewModel)
             }
             composable(Screen.Settings.route) {
                 SettingsScreen(viewModel = settingsViewModel)

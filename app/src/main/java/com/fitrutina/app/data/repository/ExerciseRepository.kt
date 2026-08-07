@@ -1,6 +1,7 @@
 package com.fitrutina.app.data.repository
 
 import com.fitrutina.app.data.local.entity.FavoriteExercise
+import com.fitrutina.app.data.local.entity.ProgressPhoto
 import com.fitrutina.app.data.remote.dto.ExerciseCategoryDto
 import com.fitrutina.app.data.remote.dto.ExerciseDto
 import kotlinx.coroutines.flow.Flow
@@ -27,4 +28,13 @@ interface ExerciseRepository {
 
     /** Verifica si un ejercicio es favorito */
     fun isFavorite(exerciseId: Int): Flow<Boolean>
+
+    /** Obtiene todas las fotos de progreso del usuario */
+    fun getProgressPhotos(): Flow<List<ProgressPhoto>>
+
+    /** Guarda una foto de progreso en Room */
+    suspend fun addProgressPhoto(photo: ProgressPhoto)
+
+    /** Elimina una foto de progreso de Room */
+    suspend fun deleteProgressPhoto(photo: ProgressPhoto)
 }

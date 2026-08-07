@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.fitrutina.app.FitRutinaApplication
 import com.fitrutina.app.data.local.entity.FavoriteExercise
+import com.fitrutina.app.data.local.entity.ProgressPhoto
 import com.fitrutina.app.data.remote.dto.ExerciseCategoryDto
 import com.fitrutina.app.data.remote.dto.ExerciseDto
 import com.fitrutina.app.data.repository.ExerciseRepository
@@ -22,11 +23,13 @@ import kotlinx.coroutines.launch
  */
 class ExerciseViewModel(application: Application) : AndroidViewModel(application) {
 
-    // Inyección del repositorio centralizado desde la clase Application
     private val repository: ExerciseRepository = (application as FitRutinaApplication).exerciseRepository
 
     /** Flow observable de ejercicios favoritos persistidos en Room vía Repository */
     val favorites: Flow<List<FavoriteExercise>> = repository.getFavoriteExercises()
+
+    /** Flow observable de fotos de progreso del usuario */
+    val progressPhotos: Flow<List<ProgressPhoto>> = repository.getProgressPhotos()
 
     /** Estado reactivo de las categorías musculares (Loading, Success, Error) */
     private val _categoriesState = MutableStateFlow<UiState<List<ExerciseCategoryDto>>>(UiState.Loading)
@@ -115,6 +118,28 @@ class ExerciseViewModel(application: Application) : AndroidViewModel(application
     fun removeFavorite(favorite: FavoriteExercise) {
         viewModelScope.launch {
             repository.removeFavorite(favorite)
+        }
+    }
+
+    /**
+     * Guarda una foto de progreso en Room a través de [ExerciseRepository].
+     */
+    fun saveProgressPhoto(photoUri: String, note: String?) {
+        viewModelScope.launch {
+            val photo = ProgressPhoto(
+                photoUri = photoUri,
+                note = note
+            )
+            repository.addProgressPhoto(photo)
+        }
+    }
+
+    /**
+     * Elimina una foto de progreso de Room a través de [ExerciseRepository].
+     */
+    fun deleteProgressPhoto(photo: ProgressPhoto) {
+        viewModelScope.launch {
+            repository.deleteProgressPhoto(photo)
         }
     }
 }

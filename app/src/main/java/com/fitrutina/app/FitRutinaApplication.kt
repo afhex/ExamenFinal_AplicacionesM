@@ -27,7 +27,8 @@ class FitRutinaApplication : Application() {
     val exerciseRepository: ExerciseRepository by lazy {
         ExerciseRepositoryImpl(
             apiService = RetrofitClient.apiService,
-            favoriteDao = database.favoriteExerciseDao()
+            favoriteDao = database.favoriteExerciseDao(),
+            progressPhotoDao = database.progressPhotoDao()
         )
     }
 }

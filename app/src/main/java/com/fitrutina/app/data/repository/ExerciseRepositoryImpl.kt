@@ -1,7 +1,9 @@
 package com.fitrutina.app.data.repository
 
 import com.fitrutina.app.data.local.dao.FavoriteExerciseDao
+import com.fitrutina.app.data.local.dao.ProgressPhotoDao
 import com.fitrutina.app.data.local.entity.FavoriteExercise
+import com.fitrutina.app.data.local.entity.ProgressPhoto
 import com.fitrutina.app.data.remote.api.WgerApiService
 import com.fitrutina.app.data.remote.dto.ExerciseCategoryDto
 import com.fitrutina.app.data.remote.dto.ExerciseDto
@@ -13,7 +15,8 @@ import kotlinx.coroutines.flow.Flow
  */
 class ExerciseRepositoryImpl(
     private val apiService: WgerApiService,
-    private val favoriteDao: FavoriteExerciseDao
+    private val favoriteDao: FavoriteExerciseDao,
+    private val progressPhotoDao: ProgressPhotoDao
 ) : ExerciseRepository {
 
     override suspend fun getCategories(): List<ExerciseCategoryDto> {
@@ -40,5 +43,17 @@ class ExerciseRepositoryImpl(
 
     override fun isFavorite(exerciseId: Int): Flow<Boolean> {
         return favoriteDao.isFavorite(exerciseId)
+    }
+
+    override fun getProgressPhotos(): Flow<List<ProgressPhoto>> {
+        return progressPhotoDao.getAllPhotos()
+    }
+
+    override suspend fun addProgressPhoto(photo: ProgressPhoto) {
+        progressPhotoDao.insertPhoto(photo)
+    }
+
+    override suspend fun deleteProgressPhoto(photo: ProgressPhoto) {
+        progressPhotoDao.deletePhoto(photo)
     }
 }

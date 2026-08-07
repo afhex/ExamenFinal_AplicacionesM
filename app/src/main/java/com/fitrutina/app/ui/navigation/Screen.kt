@@ -1,6 +1,7 @@
 package com.fitrutina.app.ui.navigation
 
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.FitnessCenter
 import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Home
@@ -27,6 +28,12 @@ sealed class Screen(
         route = "favorites",
         title = "Favoritos",
         icon = Icons.Default.FavoriteBorder
+    )
+
+    data object AddProgress : Screen(
+        route = "add_progress",
+        title = "Progreso",
+        icon = Icons.Default.CameraAlt
     )
 
     data object Settings : Screen(
