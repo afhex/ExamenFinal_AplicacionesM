@@ -5,22 +5,29 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.CameraAlt
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
@@ -36,13 +43,26 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.fitrutina.app.data.local.entity.ProgressPhoto
 import com.fitrutina.app.ui.common.isCameraPermissionGranted
 import com.fitrutina.app.ui.common.rememberCameraCaptureLauncher
 import com.fitrutina.app.ui.common.rememberCameraPermissionLauncher
 import com.fitrutina.app.ui.viewmodel.ExerciseViewModel
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 /**
- * Pantalla para registrar una foto de progreso físico utilizando la cámara e integrando permisos en runtime.
+ * Formatea una fecha timestamp a String legible.
+ */
+fun formatTimestamp(timestamp: Long): String {
+    val sdf = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+    return sdf.format(Date(timestamp))
+}
+
+/**
+ * Pantalla para registrar y visualizar la galería de fotos de progreso físico guardadas en Room.
  */
 @Composable
 fun AddProgressScreen(viewModel: ExerciseViewModel) {
@@ -51,12 +71,12 @@ fun AddProgressScreen(viewModel: ExerciseViewModel) {
     var noteText by remember { mutableStateOf("") }
     var showPermissionRationale by remember { mutableStateOf(false) }
 
-    // Launcher para la captura de cámara
+    val savedPhotos by viewModel.progressPhotos.collectAsStateWithLifecycle(initialValue = emptyList())
+
     val cameraLauncher = rememberCameraCaptureLauncher { bitmap ->
         capturedBitmap = bitmap
     }
 
-    // Launcher para solicitar permiso de cámara en runtime
     val permissionLauncher = rememberCameraPermissionLauncher(
         onPermissionGranted = {
             cameraLauncher.launch(null)
@@ -113,7 +133,7 @@ fun AddProgressScreen(viewModel: ExerciseViewModel) {
                         contentDescription = "Foto de progreso",
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(260.dp)
+                            .height(240.dp)
                             .clip(RoundedCornerShape(12.dp))
                     )
                     Spacer(modifier = Modifier.height(12.dp))
@@ -126,7 +146,7 @@ fun AddProgressScreen(viewModel: ExerciseViewModel) {
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .height(200.dp),
+                            .height(180.dp),
                         contentAlignment = Alignment.Center
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
@@ -164,14 +184,14 @@ fun AddProgressScreen(viewModel: ExerciseViewModel) {
             maxLines = 3
         )
 
-        Spacer(modifier = Modifier.height(20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
 
         // Botón de guardado
         Button(
             onClick = {
                 if (capturedBitmap != null) {
                     viewModel.saveProgressPhoto(
-                        photoUri = "progress_${System.currentTimeMillis()}",
+                        photoUri = "captured_progress_${System.currentTimeMillis()}",
                         note = noteText.ifBlank { null }
                     )
                     capturedBitmap = null
@@ -185,5 +205,84 @@ fun AddProgressScreen(viewModel: ExerciseViewModel) {
             Spacer(modifier = Modifier.size(8.dp))
             Text("Guardar Registro de Progreso")
         }
+
+        Spacer(modifier = Modifier.height(24.dp))
+        HorizontalDivider()
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Galería de fotos guardadas en Room
+        Text(
+            text = "🖼️ Historial de Progreso (${savedPhotos.size})",
+            style = MaterialTheme.typography.titleLarge,
+            color = MaterialTheme.colorScheme.onSurface
+        )
+        Spacer(modifier = Modifier.height(12.dp))
+
+        if (savedPhotos.isEmpty()) {
+            Text(
+                text = "No has guardado fotos de progreso aún.",
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        } else {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                savedPhotos.forEach { photo ->
+                    ProgressPhotoItemCard(
+                        photo = photo,
+                        onDelete = { viewModel.deleteProgressPhoto(photo) }
+                    )
+                }
+            }
+        }
     }
 }
+
+/**
+ * Tarjeta individual para mostrar un registro de progreso guardado en Room.
+ */
+@Composable
+private fun ProgressPhotoItemCard(
+    photo: ProgressPhoto,
+    onDelete: () -> Unit
+) {
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = "📅 ${formatTimestamp(photo.date)}",
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                if (!photo.note.isNull_or_blank()) {
+                    Spacer(modifier = Modifier.height(4.dp))
+                    Text(
+                        text = photo.note!!,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+            }
+
+            IconButton(onClick = onDelete) {
+                Icon(
+                    imageVector = Icons.Default.Delete,
+                    contentDescription = "Eliminar progreso",
+                    tint = MaterialTheme.colorScheme.error
+                )
+            }
+        }
+    }
+}
+
+private fun String?.isNull_or_blank(): Boolean = this == null || this.trim().isEmpty()
