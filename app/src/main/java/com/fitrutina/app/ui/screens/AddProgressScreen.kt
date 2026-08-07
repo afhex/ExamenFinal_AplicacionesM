@@ -283,6 +283,13 @@ private fun ProgressPhotoItemCard(
             }
         }
     }
+
+    if (showPermissionRationale) {
+        com.fitrutina.app.ui.common.PermissionRationaleDialog(
+            onDismiss = { showPermissionRationale = false }
+        )
+    }
 }
+
 
 private fun String?.isNull_or_blank(): Boolean = this == null || this.trim().isEmpty()
